@@ -6,7 +6,7 @@ import pandas as pd
 from pylint import lint
 from importlib.metadata import version
 
-HOMEWORK = "fom2425hw1"
+HOMEWORK = "RESULTS"
 NR_TESTS = 3                # Will increase during final grading
 
 @contextmanager
