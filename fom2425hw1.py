@@ -8,7 +8,7 @@ Created on Tue Dec 17 08:36:34 2024
 
 """
 from pulp import GLPK
-from pulp import LpProblem, LpMaximize, LpMinimize, LpVariable, GLPK, LpStatus, lpSum
+from pulp import LpProblem, LpMaximize, LpMinimize, LpVariable, GLPK, lpSum
 
 # Constants
 BIG_M = 100000
@@ -45,20 +45,27 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
 
     x1 = {i: LpVariable(name=f"x1_{i}", cat="Binary") for i in range(nr_periods)}  # Order setup
     x2 = {i: LpVariable(name=f"x2_{i}", lowBound=0) for i in range(nr_periods)}  # Inventory level
+    y = {i: LpVariable(name=f"y_{i}", lowBound=0) for i in range(nr_periods)} # Production Quantity (modification to existing LP problem)
 
-    # Add the objective function
+    # Objective function
 
-    model += lpSum(cost_h * x2[i] + cost_k * x1[i] + cost_p[i]*x2[i] for i in range(nr_periods))
+    model += lpSum(cost_h * x2[i] + cost_k * x1[i] + cost_p[i]*y[i] for i in range(nr_periods))
 
     # Model Constraints 
     
-    for i in range(1, nr_periods):
-        model += x2[i] == x2[i - 1] + x1[i] - requirements[i]  
+    for i in range(nr_periods):
+        if i == 0:
+            model += x2[i] == init_inv + y[i] - requirements[i]
+        else:
+            model += x2[i] == x2[i - 1] + y[i] - requirements[i]
 
 
     for i in range(nr_periods):
-        model += x2[i] - BIG_M  <= 0  
+        model += y[i] <= BIG_M * x1[i]  
+        model += x2[i] >= 0 
 
+    for i in range(nr_periods):
+        model += y[i] >= 0
     
     # Default return values = No solution found
     obj_val = 0
@@ -85,16 +92,15 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
     
     # Retrieve the objective value
     obj_val = model.objective.value()
-    
-    # Retrieve the periods in which you decide to produce
-   
+
+    # Retrieve the setup decisions   
     for i in range(nr_periods):
-        if x2[i].value() > 0:
-            setups[i] = 1
+         setups[i] = int(x1[i].value()) 
+
 
     return obj_val, setups
 
-def lsp2(cost_h, cost_k, init_inv, requirements):
+def lsp2(cost_h, cost_k, init_inv, requirements): ### NOT COMPLETE 
     """Solving the uncapacitated lot sizing problem
     with non-consecutive setups (ULSP_NCS).
 
@@ -118,7 +124,7 @@ def lsp2(cost_h, cost_k, init_inv, requirements):
     nr_periods = len(requirements)
 
     # Declare model
-    model = None    # TEMPORARY: replace with your model declaration
+    model = None
 
 
     obj_val = 0
@@ -152,7 +158,7 @@ def lsp2(cost_h, cost_k, init_inv, requirements):
  
     return obj_val, setups
 
-def lsp3(cost_h, cost_k, init_inv, requirements):
+def lsp3(cost_h, cost_k, init_inv, requirements): ### NOT COMPLETE 
     """Solving the uncapacitated multi-product lot sizing problem (UMLSP).
 
     This function generates the UMLSP formulation in PuLP
