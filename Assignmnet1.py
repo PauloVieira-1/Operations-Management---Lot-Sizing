@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from pulp import GLPK
 from pulp import LpProblem, LpMaximize, LpMinimize, LpVariable, GLPK, lpSum
 
 # Constants
@@ -32,7 +31,7 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
 
     # Model Decleration
 
-    model = LpProblem("Period dependent production costs", LpMinimize)
+    model = LpProblem("Period_dependent_production_costs", LpMinimize)
 
     # Decision Variables 
 
@@ -117,7 +116,7 @@ def lsp2(cost_h, cost_k, init_inv, requirements):
 
     # Model Decleration
 
-    model = LpProblem("Period dependent production costs", LpMinimize)
+    model = LpProblem("Non_consecutive_periods_with_production", LpMinimize)
 
     # Decision Variables 
 
@@ -216,7 +215,7 @@ def lsp3(cost_h, cost_k, init_inv, requirements): ### NOT COMPLETE
 
     # Model Decleration
 
-    model = LpProblem("Period dependent production costs", LpMinimize)
+    model = LpProblem("Two_products_on_a_single_machine", LpMinimize)
 
     # Decision Variables 
 

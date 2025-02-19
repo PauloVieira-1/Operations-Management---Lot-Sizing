@@ -1,10 +1,4 @@
 import subprocess
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jan  3 10:35:38 2024
-
-@author: rbroekme
-"""
 import sys
 import os
 from contextlib import contextmanager
