@@ -100,8 +100,13 @@ This assignment was implemented using **PuLP** and solved using the **GLPK solve
 
 To test the implementation, run:
 
+In "Assignmnet1" file:
 ```bash
-python fom2425hw1.py
+python Assignmnet1.py
+```
+In "auto_grader_assignment1" (generates an excel sheet), run:
+```bash
+python auto_grader_assignment1
 ```
 
 Expected output format:
