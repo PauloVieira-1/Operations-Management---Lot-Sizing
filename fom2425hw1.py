@@ -48,7 +48,7 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
 
     # Add the objective function
 
-    model += lpSum(cost_h * x2[i] + cost_k * x1[i] for i in range(nr_periods))
+    model += lpSum(cost_h * x2[i] + cost_k * x1[i] + cost_p[i]*x2[i] for i in range(nr_periods))
 
     # Model Constraints 
     
@@ -77,6 +77,7 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
             inventory -= requirements[per]
             obj_val += cost_h*inventory
         return obj_val, setups
+    
     model.solve(GLPK(msg=False, options=['--tmlim', '10']))
 
     if model.status != 1:
@@ -87,12 +88,9 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
     
     # Retrieve the periods in which you decide to produce
    
-
-    variables_list = model.variables()
-
-    for i in range(nr_periods, len(variables_list)):
-        if variables_list[i].value() > 0:
-            setups[nr_periods - i] = 1
+    for i in range(nr_periods):
+        if x2[i].value() > 0:
+            setups[i] = 1
 
     return obj_val, setups
 
