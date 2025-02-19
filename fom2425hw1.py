@@ -4,10 +4,9 @@ Created on Tue Dec 17 08:36:34 2024
 
 @author: Rob Broekmeulen
 
-name = Paulo Vieira 1798618
+@name = Paulo Vieira 1798618
 
 """
-# Add to the import statement the functions you used
 from pulp import GLPK
 from pulp import LpProblem, LpMaximize, LpMinimize, LpVariable, GLPK, LpStatus, lpSum
 
@@ -38,37 +37,33 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
     # Define parameters
     nr_periods = len(requirements)
 
-    # Declare model
+    # Model Decleration
 
-    # model = None 
     model = LpProblem("Period dependent production costs", LpMinimize)
 
     # Decision Variables 
 
-    x1 = {i: LpVariable(name = f"x1_{i}", cat="Binary") for i in range(nr_periods)} # Decision to order (binary variable)
-    x2 = {i: LpVariable(name = f"x2_{i}", lowBound=0) for i in range(nr_periods)} # Inventory  in period i 
+    x1 = {i: LpVariable(name=f"x1_{i}", cat="Binary") for i in range(nr_periods)}  # Order setup
+    x2 = {i: LpVariable(name=f"x2_{i}", lowBound=0) for i in range(nr_periods)}  # Inventory level
 
     # Add the objective function
-    model += lpSum(cost_h * x2[i] + cost_p[i] * x1[i] for i in range(nr_periods))
+
+    model += lpSum(cost_h * x2[i] + cost_k * x1[i] for i in range(nr_periods))
 
     # Model Constraints 
     
-    for i in range(nr_periods): 
-        if i == 0:
-            model += x2[i] == init_inv + x1[i] - requirements[i]
-        else:
-            model += x2[i] == x2[i - 1] + x1[i] - requirements[i]
+    for i in range(1, nr_periods):
+        model += x2[i] == x2[i - 1] + x1[i] - requirements[i]  
+
 
     for i in range(nr_periods):
-        model += requirements[i] - BIG_M * x1[i] <= 0  
+        model += x2[i] - BIG_M  <= 0  
 
-    for i in range(nr_periods):
-        model += x2[i] >= 0 
-
-
+    
     # Default return values = No solution found
     obj_val = 0
     setups = [0]*nr_periods
+
     if model is None:
         # Worst case: produce every period with a net requirement (=L4L)
         obj_val = 0
@@ -82,20 +77,22 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
             inventory -= requirements[per]
             obj_val += cost_h*inventory
         return obj_val, setups
-    # Solve the constructed model with GLPK within 10 seconds
     model.solve(GLPK(msg=False, options=['--tmlim', '10']))
-    
+
     if model.status != 1:
-        # Model did not result in an optimal solution
         return model.status, setups
+    
     # Retrieve the objective value
     obj_val = model.objective.value()
+    
     # Retrieve the periods in which you decide to produce
-    # For example [1, 0, 0, 1, 0, 1] if you produce in periods 0, 3, and 5
-    # YOUR CODE HERE
+   
 
-    if model.status == 1:
-        return "TEST"
+    variables_list = model.variables()
+
+    for i in range(nr_periods, len(variables_list)):
+        if variables_list[i].value() > 0:
+            setups[nr_periods - i] = 1
 
     return obj_val, setups
 
