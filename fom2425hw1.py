@@ -120,12 +120,45 @@ def lsp2(cost_h, cost_k, init_inv, requirements): ### NOT COMPLETE
     setups       : a list with the setup decision per period
     """
 
-    # Define parameters
     nr_periods = len(requirements)
 
-    # Declare model
-    model = None
+    # Model Decleration
 
+    model = LpProblem("Period dependent production costs", LpMinimize)
+
+    # Decision Variables 
+
+    x1 = {i: LpVariable(name=f"x1_{i}", cat="Binary") for i in range(nr_periods)}  # Order setup
+    x2 = {i: LpVariable(name=f"x2_{i}", lowBound=0) for i in range(nr_periods)}  # Inventory level
+    y = {i: LpVariable(name=f"y_{i}", lowBound=0) for i in range(nr_periods)} # Production Quantity 
+
+    # Objective function
+
+    model += lpSum(cost_h * x2[i] + cost_k * x1[i] for i in range(nr_periods))
+
+    # Model Constraints 
+    
+    for i in range(nr_periods):
+        if i == 0:
+            model += x2[i] == init_inv + y[i] - requirements[i]
+        else:
+            model += x2[i] == x2[i - 1] + y[i] - requirements[i]
+
+
+    for i in range(nr_periods):
+        model += y[i] <= BIG_M * x1[i]  
+        model += x2[i] >= 0 
+
+    for i in range(nr_periods):
+        model += y[i] >= 0
+
+    for i in range(nr_periods):
+        if i % 2 == 1 or i == nr_periods - 1:
+            model += x1[i] == 0
+        elif i % 2 == 0:
+            model += x1[i] == 1
+
+    # Default return values = No solution found
 
     obj_val = 0
     setups = [0]*nr_periods
@@ -148,13 +181,20 @@ def lsp2(cost_h, cost_k, init_inv, requirements): ### NOT COMPLETE
             inventory -= requirements[per]
             obj_val += cost_h*inventory
         return obj_val, setups
+    
     # Solve the constructed model with GLPK within 10 seconds
     model.solve(GLPK(msg=False, options=['--tmlim', '10']))
+
     if model.status != 1:
         # Model did not result in an optimal solution
         return model.status, setups
+    
     # Retrieve the objective value
     obj_val = model.objective.value()
+
+    # Retrieve the setup decisions
+    for i in range(nr_periods):
+         setups[i] = int(x1[i].value()) 
  
     return obj_val, setups
 
