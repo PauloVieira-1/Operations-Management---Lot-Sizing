@@ -106,7 +106,7 @@ python Assignmnet1.py
 ```
 In "auto_grader_assignment1" (generates an excel sheet), run:
 ```bash
-python auto_grader_assignment1
+python auto_grader_assignment1.py
 ```
 
 Expected output format:
