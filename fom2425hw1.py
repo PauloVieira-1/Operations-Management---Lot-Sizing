@@ -214,11 +214,53 @@ def lsp3(cost_h, cost_k, init_inv, requirements): ### NOT COMPLETE
     # Define parameters
     nr_periods = len(requirements)
 
-    # Declare model
-    model = None    
+    # Model Decleration
+
+    model = LpProblem("Period dependent production costs", LpMinimize)
+
+    # Decision Variables 
+
+    x1_p1 = {i: LpVariable(name=f"x1P1_{i}", cat="Binary") for i in range(nr_periods)}  # Order setup product 1
+    x1_p2 = {i: LpVariable(name=f"x1P2_{i}", cat="Binary") for i in range(nr_periods)}   # Order setup product 2
+
+    x2_p1 = {i: LpVariable(name=f"x2P1_{i}", lowBound=0) for i in range(nr_periods)}  # Inventory level product 1
+    x2_p2 = {i: LpVariable(name=f"x2P2_{i}", lowBound=0) for i in range(nr_periods)}  # Inventory level product 2 
+
+    y_1 = {i: LpVariable(name=f"y1_{i}", lowBound=0) for i in range(nr_periods)} # Production Quantity product 1 
+    y_2 = {i: LpVariable(name=f"y2_{i}", lowBound=0) for i in range(nr_periods)} # Production Quantity product 2
+
+    # Objective function
+
+    model += lpSum(cost_h * (x2_p1[i] + x2_p2[i]) + cost_k * (x1_p1[i] + x1_p2[i]) for i in range(nr_periods))
+
+    # Model Constraints 
+    
+    for i in range(nr_periods):
+        if i == 0:
+            model += x2_p1[i] == init_inv[0] + y_1[i] - requirements[i][0]
+            model += x2_p2[i] == init_inv[1] + y_2[i] - requirements[i][1]
+        else:
+            model += x2_p1[i] == x2_p1[i - 1] + y_1[i] - requirements[i][0]
+            model += x2_p2[i] == x2_p2[i - 1] + y_2[i] - requirements[i][1]
+
+    for i in range(nr_periods):
+
+        model += y_1[i] <= BIG_M * x1_p1[i]  
+        model += x2_p1[i] >= 0 
+
+        model += y_2[i] <= BIG_M * x1_p2[i]  
+        model += x2_p2[i] >= 0 
+
+    for i in range(nr_periods):
+        model += y_1[i] >= 0
+        model += y_2[i] >= 0
+    
+    for i in range(nr_periods):
+        model += x1_p1[i] + x1_p2[i] <= 1
 
     obj_val = 0
     setups = [0]*nr_periods
+
     if model is None:
         # Worst case: produce each product every other period
         # if the net requirement is positive (=L4L)
@@ -247,18 +289,29 @@ def lsp3(cost_h, cost_k, init_inv, requirements): ### NOT COMPLETE
             else:
                 prod = 0
         return obj_val, setups
+    
     # Solve the constructed model with GLPK within 10 seconds
     model.solve(GLPK(msg=False, options=['--tmlim', '10']))
+    # print(model)
+
     if model.status != 1:
         # Model did not result in an optimal solution
         return model.status, setups
+    
     # Retrieve the objective value
     obj_val = model.objective.value()
+
     # Retrieve the periods in which you decide to produce
+
+    for i in range(nr_periods):
+        if (int(x1_p1[i].value()) == 1): 
+            setups[i] = 1
+        elif (int(x1_p2[i].value() == 1)):
+            setups[i] = 2 
 
     return obj_val, setups
 
-# TESTS
+# Tests
 
 if __name__ == '__main__':
     ex1_data = [20, 25, 14, 20, 15, 5.5, 2.5]
