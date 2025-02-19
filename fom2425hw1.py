@@ -5,6 +5,7 @@ Created on Tue Dec 17 08:36:34 2024
 @author: Rob Broekmeulen
 
 name = Paulo Vieira 1798618
+
 """
 # Add to the import statement the functions you used
 from pulp import GLPK
@@ -42,24 +43,33 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
     # model = None 
     model = LpProblem("Period dependent production costs", LpMinimize)
 
-    # Add decision variables
-    
+    # Decision Variables 
+
     x1 = {i: LpVariable(name = f"x1_{i}", cat="Binary") for i in range(nr_periods)} # Decision to order (binary variable)
-    x2 = {i: LpVariable(name = f"x2_{i}", lowBound=0) for i in range(nr_periods)} # Inventory to order in period i 
+    x2 = {i: LpVariable(name = f"x2_{i}", lowBound=0) for i in range(nr_periods)} # Inventory  in period i 
 
     # Add the objective function
-    model += lpSum(cost_h * x2 + cost_p * x1)
+    model += lpSum(cost_h * x2[i] + cost_p[i] * x1[i] for i in range(nr_periods))
 
-    # Add the constraints to the model
+    # Model Constraints 
     
-    model += ()
+    for i in range(nr_periods): 
+        if i == 0:
+            model += x2[i] == init_inv + x1[i] - requirements[i]
+        else:
+            model += x2[i] == x2[i - 1] + x1[i] - requirements[i]
 
-    # Solve the model
+    for i in range(nr_periods):
+        model += requirements[i] - BIG_M * x1[i] <= 0  
+
+    for i in range(nr_periods):
+        model += x2[i] >= 0 
+
+
     # Default return values = No solution found
     obj_val = 0
     setups = [0]*nr_periods
     if model is None:
-        # You did not decide to develop a optimization model
         # Worst case: produce every period with a net requirement (=L4L)
         obj_val = 0
         inventory = init_inv
