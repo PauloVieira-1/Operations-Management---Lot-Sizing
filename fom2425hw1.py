@@ -116,33 +116,19 @@ def lsp2(cost_h, cost_k, init_inv, requirements):
 
     # Define parameters
     nr_periods = len(requirements)
-    # YOUR CODE HERE
 
     # Declare model
     model = None    # TEMPORARY: replace with your model declaration
 
-    # Add decision variables
-    # YOUR CODE HERE
 
-    # Add the objective function
-    # YOUR CODE HERE
-
-    # Add the constraints to the model
-    # YOUR CODE HERE
-
-    # Solve the model
-    # Default return values = No solution found
     obj_val = 0
     setups = [0]*nr_periods
     if model is None:
-        # You did not decide to develop a model
         # Worst case: produce every other period
         obj_val = 0
         inventory = init_inv
         for per in range(nr_periods):
             if per % 2 == 0:
-                # Even period
-                # Last period?
                 if per + 1 == nr_periods:
                     req2 = requirements[per]
                 else:
@@ -153,7 +139,6 @@ def lsp2(cost_h, cost_k, init_inv, requirements):
                     setups[per] = 1
                     obj_val += cost_k
                     inventory += net_req
-            # Inventory
             inventory -= requirements[per]
             obj_val += cost_h*inventory
         return obj_val, setups
@@ -164,10 +149,7 @@ def lsp2(cost_h, cost_k, init_inv, requirements):
         return model.status, setups
     # Retrieve the objective value
     obj_val = model.objective.value()
-    # Retrieve the periods in which you decide to produce
-    # For example [1, 0, 1, 0, 1] if you produce in periods 0, 2, and 4
-    # YOUR CODE HERE
-
+ 
     return obj_val, setups
 
 def lsp3(cost_h, cost_k, init_inv, requirements):
@@ -192,29 +174,15 @@ def lsp3(cost_h, cost_k, init_inv, requirements):
 
     # Define parameters
     nr_periods = len(requirements)
-    # YOUR CODE HERE
 
     # Declare model
-    model = None    # TEMPORARY: replace with your model declaration
+    model = None    
 
-    # Add decision variables
-    # YOUR CODE HERE
-
-    # Add the objective function
-    # YOUR CODE HERE
-
-    # Add the constraints to the model
-    # YOUR CODE HERE
-
-    # Solve the model
-    # Default return values = No solution found
     obj_val = 0
     setups = [0]*nr_periods
     if model is None:
-        # You did not decide to develop a model
         # Worst case: produce each product every other period
         # if the net requirement is positive (=L4L)
-        # Note: no guarantee/check for feasibility!
         obj_val = 0
         inventory = []
         inventory.append(init_inv[0])
@@ -249,13 +217,12 @@ def lsp3(cost_h, cost_k, init_inv, requirements):
     obj_val = model.objective.value()
     # Retrieve the periods in which you decide to produce
     # For example [1, 2, 1, 0, 1] if you produce product 1 in periods 0, 2, and 4
-    # and product 2 in period 1
-    # YOUR CODE HERE
 
     return obj_val, setups
 
+# TESTS
+
 if __name__ == '__main__':
-    # Below you can experiment with your functions
     ex1_data = [20, 25, 14, 20, 15, 5.5, 2.5]
     pt_data = [1.0, 2.0, 2.0, 1.5, 1.0, 0.5, 1.0]
     min_cost, setup_periods = lsp1(2, 50, pt_data, 25, ex1_data)
