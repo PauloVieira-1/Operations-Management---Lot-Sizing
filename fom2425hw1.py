@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Dec 17 08:36:34 2024
 
-@author: Rob Broekmeulen
-
-@name = Paulo Vieira 1798618
-
-"""
 from pulp import GLPK
 from pulp import LpProblem, LpMaximize, LpMinimize, LpVariable, GLPK, lpSum
 
@@ -100,7 +93,7 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
 
     return obj_val, setups
 
-def lsp2(cost_h, cost_k, init_inv, requirements): ### NOT COMPLETE 
+def lsp2(cost_h, cost_k, init_inv, requirements):
     """Solving the uncapacitated lot sizing problem
     with non-consecutive setups (ULSP_NCS).
 
@@ -262,7 +255,6 @@ def lsp3(cost_h, cost_k, init_inv, requirements): ### NOT COMPLETE
     # Retrieve the objective value
     obj_val = model.objective.value()
     # Retrieve the periods in which you decide to produce
-    # For example [1, 2, 1, 0, 1] if you produce product 1 in periods 0, 2, and 4
 
     return obj_val, setups
 
