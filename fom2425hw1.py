@@ -3,9 +3,12 @@
 Created on Tue Dec 17 08:36:34 2024
 
 @author: Rob Broekmeulen
+
+name = Paulo Vieira 1798618
 """
 # Add to the import statement the functions you used
 from pulp import GLPK
+from pulp import LpProblem, LpMaximize, LpMinimize, LpVariable, GLPK, LpStatus, lpSum
 
 # Constants
 BIG_M = 100000
@@ -33,19 +36,23 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
 
     # Define parameters
     nr_periods = len(requirements)
-    # YOUR CODE HERE
 
     # Declare model
-    model = None    # TEMPORARY: replace with your model declaration
+
+    # model = None 
+    model = LpProblem("Period dependent production costs", LpMinimize)
 
     # Add decision variables
-    # YOUR CODE HERE
+    
+    x1 = {i: LpVariable(name = f"x1_{i}", cat="Binary") for i in range(nr_periods)} # Decision to order (binary variable)
+    x2 = {i: LpVariable(name = f"x2_{i}", lowBound=0) for i in range(nr_periods)} # Inventory to order in period i 
 
     # Add the objective function
-    # YOUR CODE HERE
+    model += lpSum(cost_h * x2 + cost_p * x1)
 
     # Add the constraints to the model
-    # YOUR CODE HERE
+    
+    model += ()
 
     # Solve the model
     # Default return values = No solution found
@@ -67,6 +74,7 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
         return obj_val, setups
     # Solve the constructed model with GLPK within 10 seconds
     model.solve(GLPK(msg=False, options=['--tmlim', '10']))
+    
     if model.status != 1:
         # Model did not result in an optimal solution
         return model.status, setups
@@ -75,6 +83,9 @@ def lsp1(cost_h, cost_k, cost_p, init_inv, requirements):
     # Retrieve the periods in which you decide to produce
     # For example [1, 0, 0, 1, 0, 1] if you produce in periods 0, 3, and 5
     # YOUR CODE HERE
+
+    if model.status == 1:
+        return "TEST"
 
     return obj_val, setups
 

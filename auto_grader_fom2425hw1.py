@@ -1,3 +1,4 @@
+import subprocess
 # -*- coding: utf-8 -*-
 """
 Created on Wed Jan  3 10:35:38 2024
@@ -62,7 +63,16 @@ def grade_submissions():
 
     # Check version pylint
     print(f"Current pylint version: {version('pylint')}")
-    print(f"Current GLPK version: {version('glpk_cmd')}")
+    
+    def get_glpk_version():
+         
+        try:
+            output = subprocess.run(["glpsol", "--version"], capture_output=True, text=True)
+            return output.stdout.strip()
+        except FileNotFoundError:
+            return "GLPK is not installed or not in PATH."
+
+    print(f"Current GLPK version: {get_glpk_version()}")
     # Clear the pylint cache
     lint.pylinter.MANAGER.astroid_cache = {}
     
