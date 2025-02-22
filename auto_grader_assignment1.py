@@ -7,7 +7,7 @@ from pylint import lint
 from importlib.metadata import version
 
 HOMEWORK = "RESULTS"
-NR_TESTS = 3                # Will increase during final grading
+NR_TESTS = 3                
 
 @contextmanager
 def suppress_stdout():
@@ -22,7 +22,6 @@ def suppress_stdout():
 
 def unit_test(test_module, test_nr):
     """ Unit tester."""
-    # Init return values
     points = 0
     obj_val = 0
     setups = []
@@ -55,7 +54,6 @@ def unit_test(test_module, test_nr):
 def grade_submissions():
     """ Code to check submitted file with unit tests. """
 
-    # Check version pylint
     print(f"Current pylint version: {version('pylint')}")
     
     def get_glpk_version():
@@ -67,14 +65,11 @@ def grade_submissions():
             return "GLPK is not installed or not in PATH."
 
     print(f"Current GLPK version: {get_glpk_version()}")
-    # Clear the pylint cache
     lint.pylinter.MANAGER.astroid_cache = {}
     
-    # Collect the student submissions from the current directory
     files = []
     for file in os.listdir():
         if file.endswith(".py"):
-            # Jump over the auto grader file
             if file == 'auto_grader_' + HOMEWORK + '.py':
                 continue
             files.append(os.path.splitext(file)[0])
@@ -82,18 +77,14 @@ def grade_submissions():
     files.sort(reverse=False)
     print('Files to process:',  len(files))
 
-    # Dataframe with output of the functions per student group
     df_res = pd.DataFrame(files, columns=['FileName'])
     if len(files) > 10:
-        # Add columns for group IDs (only for batch grading)
         df_res["Group"] = ""
         df_res["ID1"] = ""
         df_res["ID2"] = ""
-    # Add column for the grades
     df_res["Grade"] = 0
     df_res["Static"] = 0.
     df_res["Dynamic"] = 0
-    # Add columns for each test
     for test_nr in range(NR_TESTS):
         df_res[f"U{test_nr}_pt"] = 0
         df_res[f"U{test_nr}_return_0"] = ""
@@ -103,16 +94,13 @@ def grade_submissions():
     file_nr = 0
     while file_nr < len(files):
         if len(files) > 10:
-            # Only needed for the batch grading
             group_data = files[file_nr].split("_")
             df_res.at[file_nr, "Group"] = group_data[0]
             df_res.at[file_nr, "ID1"] = group_data[1]
             df_res.at[file_nr, "ID2"] = group_data[2]
 
-        # Get student file
         group_module = __import__(files[file_nr])
 
-        # Init scores
         static_score = 0.
         dynamic_score = 0
 
@@ -121,12 +109,9 @@ def grade_submissions():
                 results = lint.Run([files[file_nr] + '.py'], do_exit=False)
                 static_score = results.linter.stats.global_note
             except UnicodeError:
-                # Unknown diacriticals in student names
-                static_score = -1.         # Requires attention!
-        # Write static score
+                static_score = -1.        
         df_res.at[file_nr, "Static"] = static_score
 
-        # Execute unit tests
         for test_nr in range(NR_TESTS):
             points, return_0, return_1, error_str = unit_test(group_module, test_nr)
             df_res.at[file_nr, f"U{test_nr}_pt"] = points
@@ -134,16 +119,14 @@ def grade_submissions():
             df_res.at[file_nr, f"U{test_nr}_return_1"] = return_1
             df_res.at[file_nr, f"U{test_nr}_error"] = error_str
             dynamic_score += points
-        # Write dynamic score
+        
         df_res.at[file_nr, "Dynamic"] = dynamic_score
 
-        # Write grade
         df_res.at[file_nr, 'Grade'] = round(0.2*static_score
                                             + 8*(dynamic_score/NR_TESTS), 1)
 
         file_nr += 1
 
-    # Write the results to Excel
     df_res.to_excel(HOMEWORK + "_results.xlsx")
 
 if __name__ == '__main__':
